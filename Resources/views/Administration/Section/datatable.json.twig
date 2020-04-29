@@ -1,0 +1,14 @@
+{
+    "recordsTotal": {{ recordsTotal }},
+    "recordsFiltered": {{ recordsFiltered }},
+    "data": [
+        {% for entity in entities %}
+            [
+            "{{ entity.id }}",
+            "<a href='{{ path("section_attribute_index", {"id":entity.id}) }}'>{{ entity.title }}</a>",
+            "<ul class='icons-list'><li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-menu9'></i></a><ul class='dropdown-menu dropdown-menu-right'><li><a href='{{ path('section_edit',{'id':entity.id}) }}'><i class='icon-pencil7'></i> Edit</a></li><li><a href='#' class='delete-btn' data-toggle='modal' data-target='#modal_delete' data-delete='{{ path('section_delete',{'id':entity.id}) }}'><i class='icon-bin'></i> Remove</a></li></ul></li></ul>"
+
+            ]{% if loop.last == false %},{% endif %}
+        {% endfor %}
+    ]
+}

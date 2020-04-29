@@ -1,0 +1,74 @@
+{% extends 'adminTemplate/base.html.twig' %}
+
+{% import 'adminTemplate/macros.html.twig' as macros %}
+{% set page_title %}Form Section{% endset %}
+{% block breadcrumb %}
+    <div class="breadcrumb-line">
+        <ul class="breadcrumb">
+            <li><a href="{{ path('dashboard') }}"><i class="icon-home2 position-left"></i>Dashboard</a></li>
+            <li><a href="{{ path('section_index') }}">{{ page_title }}</a></li>
+            <li class="active">Show {{ section.title }}</li>
+        </ul>
+    </div>
+{% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-flat">
+                <div class="panel-heading">
+                    <h5 class="panel-title">{{ section.title }}'s attributes</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sort</th>
+                                    <th>Field name</th>
+                                    <th>Type</th>
+                                    <th>Hint</th>
+                                    <th>Publish</th>
+                                    <th>Mandatory</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attribute in sectionAttributes %}
+                                    <tr>
+                                        <td>{% if attribute.sort %}{{ attribute.sort }}{% else %}--{% endif %}</td>
+                                        <td>{{ attribute.fieldName }}</td>
+                                        <td>
+                                            {{ attribute.typeName }}
+                                            {% if attribute.type == constant('PN\\Bundle\\FormBundle\\Entity\\SectionAttribute::TYPE_ENUMS') %}
+                                                <br>
+                                                <small>
+                                                    {% for enum in attribute.sectionAttributeEnums %}
+                                                        {{ enum.optionText }}{% if loop.last == false %}, {% endif %}
+                                                    {% else %}
+                                                        --
+                                                    {% endfor %}
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ attribute.hint }}</td>
+                                        <td>{% if attribute.publish %}<span class="badge badge-success">Yes</span>{% else %}<span class="badge badge-danger">No</span>{% endif %}</td>
+                                        <td>{% if attribute.mandatory %}<span class="badge badge-success">Yes</span>{% else %}<span class="badge badge-danger">No</span>{% endif %}</td>
+                                        <td><a href='# ' class='delete-btn' data-popup="tooltip" title="Remove" data-toggle='modal' data-target='#modal_delete' data-delete='{{ path('section_attribute_delete',{'id':attribute.id}) }}'><i class='icon-bin text-danger-600'></i></a></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript" src="{{ asset('admin/js/plugins/forms/selects/select2.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/pages/form_select2.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/plugins/forms/validation/validate.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/pages/form_validation.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/plugins/media/fancybox.min.js') }}"></script>
+{% endblock javascripts %}

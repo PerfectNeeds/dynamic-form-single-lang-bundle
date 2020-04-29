@@ -1,0 +1,175 @@
+{% extends 'adminTemplate/base.html.twig' %}
+
+{% import 'adminTemplate/macros.html.twig' as macros %}
+{% set page_title %}Edit {{ section.title }} section{% endset %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('admin/js/plugins/sortable/sortable.css') }}" rel="stylesheet" type="text/css">
+{% endblock stylesheets %}
+
+
+{% block breadcrumb %}
+    <div class="breadcrumb-line">
+        <ul class="breadcrumb">
+            <li><a href="{{ path('dashboard') }}"><i class="icon-home2 position-left"></i>Dashboard</a></li>
+            <li><a href="{{ path('section_index') }}">{{ page_title }}</a></li>
+            <li class="active">{{ page_title }}</li>
+        </ul>
+    </div>
+{% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col-md-3">
+            {{ form_start(edit_form, {'attr':{"data-toggle":"validator",'novalidate':'novalidate'}}) }}
+            <div class="panel panel-flat">
+                <div class="panel-heading">
+                    <h5 class="panel-title">Edit {{ section.title }}</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        {{ macros.input(edit_form.title,12) }}
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    {% include 'adminTemplate/saveAndResetFormFooter.html.twig' %}
+                </div>
+            </div>
+            {{ form_end(edit_form) }}
+        </div>
+        <div class="col-md-9">
+            {{ form_start(attr_form, {'attr': {"data-toggle":"validator",'novalidate':'novalidate'}}) }}
+            <div class="panel panel-flat">
+                <div class="panel-heading">
+                    <h5 class="panel-title">Add new attribute</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        {{ macros.input(attr_form.fieldName, 4) }}
+                        {{ macros.input(attr_form.hint, 4) }}
+                        {{ macros.input(attr_form.mandatory, 2) }}
+                        {{ macros.input(attr_form.publish, 2) }}
+                    </div>
+                    <div class="row">
+                        {{ macros.input(attr_form.type, 4, null,null, 'form-control select-search') }}
+                        <div class="col-md-8 hidden" id="enums">
+                            <div class="form-group">
+                                <label>Choices</label>
+                                <div class="content-group">
+                                    <input type="text" name="enums" value="" class="tags-input">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    {% include 'adminTemplate/saveAndResetFormFooter.html.twig' %}
+                </div>
+            </div>
+            {{ form_end(attr_form) }}
+        </div>
+    </div>
+    {% if section.sectionAttributes.count > 0 %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-flat">
+                    <div class="panel-heading">
+                        <h5 class="panel-title">{{ section.title }}'s attributes</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover sorted_table">
+                            <thead>
+                                <tr>
+                                    <th>Field name</th>
+                                    <th>Type</th>
+                                    <th>Hint</th>
+                                    <th>Publish</th>
+                                    <th>Mandatory</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attribute in sectionAttributes %}
+                                    <tr data-id="{{ attribute.id }}">
+                                        <td>{{ attribute.fieldName }}</td>
+                                        <td>
+                                            {{ attribute.typeName }}
+                                            {% if attribute.type == constant('PN\\Bundle\\FormBundle\\Entity\\SectionAttribute::TYPE_ENUMS') %}
+                                                <br>
+                                                <small>
+                                                    {% for enum in attribute.sectionAttributeEnums %}
+                                                        {{ enum.optionText }}{% if loop.last == false %}, {% endif %}
+                                                    {% else %}
+                                                        --
+                                                    {% endfor %}
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ attribute.hint }}</td>
+                                        <td>{% if attribute.publish %}<span class="badge badge-success">Yes</span>{% else %}<span class="badge badge-danger">No</span>{% endif %}</td>
+                                        <td>{% if attribute.mandatory %}<span class="badge badge-success">Yes</span>{% else %}<span class="badge badge-danger">No</span>{% endif %}</td>
+                                        <td><a href='# ' class='delete-btn' data-popup="tooltip" title="Remove" data-toggle='modal' data-target='#modal_delete' data-delete='{{ path('section_attribute_delete',{'id':attribute.id}) }}'><i class='icon-bin text-danger-600'></i></a></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript" src="{{ asset('admin/js/plugins/forms/selects/select2.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/pages/form_select2.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/plugins/forms/validation/validate.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/pages/form_validation.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/plugins/media/fancybox.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/plugins/forms/tags/tagsinput.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('admin/js/plugins/sortable/jquery-sortable.js') }}"></script>
+
+    <script type="text/javascript">
+        $(function () {
+            var sortable = $('.sorted_table').sortable({
+                containerSelector: 'table',
+                itemPath: '> tbody',
+                itemSelector: 'tr',
+                placeholder: '<tr class="placeholder"/>',
+                delay: 500,
+                onDrop: function ($item, container, _super) {
+                    container.el.removeClass("active");
+                    var data = sortable.sortable("serialize").get();
+
+                    var jsonString = JSON.stringify(data);
+                    sortable.sortable('disable');
+                    $.post('{{ path('section_attribute_sort',{'id':section.id}) }}', {'json': jsonString}, function (response) {
+                        sortable.sortable('enable');
+                        successNotify(response.message);
+                    }, 'JSON');
+                    _super($item, container);
+                }
+            });
+            hideShowEnums();
+            $('.tags-input').tagsinput();
+
+            $("#pn_bundle_formbundle_sectionattribute_type").change(function () {
+                hideShowEnums();
+            });
+
+            function hideShowEnums() {
+                var type = $("#pn_bundle_formbundle_sectionattribute_type").val();
+                if (type == {{ constant('PN\\Bundle\\FormBundle\\Entity\\SectionAttribute::TYPE_ENUMS') }}) {
+                    $("#enums").removeClass("hidden");
+        {#                    $("#enums").find("input").attr("required", "required");#}
+                    } else {
+                        $("#enums").addClass("hidden");
+                        $("#enums").find("input").removeAttr("required");
+                    }
+                }
+            });
+
+    </script>
+
+{% endblock javascripts %}
